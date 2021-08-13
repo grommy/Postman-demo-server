@@ -1,10 +1,10 @@
-Flask==0.10.1
-Flask-RESTful==0.2.12
-Jinja2==2.7.2
-MarkupSafe==0.19
-Werkzeug==0.9.4
 aniso8601==0.82
-itsdangerous==0.23
+click==8.0.1
+Flask==2.0.1
+Flask-RESTful==0.3.9
+itsdangerous==2.0.1
+Jinja2==3.0.1
+MarkupSafe==2.0.1
 pytz==2014.1.1
 six==1.6.1
-wsgiref==0.1.2
+Werkzeug==2.0.1

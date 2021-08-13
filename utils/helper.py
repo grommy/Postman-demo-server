@@ -1,3 +1,4 @@
+import base64
 import string
 import random
 import json
@@ -6,9 +7,11 @@ POSTMAN_METHODS = ["GET", "POST", "PATCH", "PUT", "COPY", "HEAD"
                    "DELETE", "LOCK", "UNLOCK", "PROPFIND",
                    "PURGE", "LINK", "UNLINK", "OPTIONS"]
 
+
 def generate_token(n=30):
     """ returns a n-digit letters-only random token """
-    return ''.join(random.choice(string.ascii_letters) for i in xrange(n))
+    return ''.join(random.choice(string.ascii_letters) for i in range(n))
+
 
 def json_safe(string, content_type='application/octet-stream'):
     """Returns JSON-safe version of `string`.
@@ -42,6 +45,7 @@ Completely synergize resource sucking relationships via premier niche markets. P
     """
     return "".join([msg for i in range(n)])
 
+
 def dummy_xml(n=5):
     """ returns dummy xml repeated n times """
     header = """<?xml version='1.0' encoding='UTF-8'?>
@@ -53,6 +57,7 @@ def dummy_xml(n=5):
     </note> """
     footer = "</listofnotes>"
     return header + "".join([content for i in range(n)]) + footer
+
 
 def dummy_json(n=5):
     """ returns dummy json repeated n times """

@@ -13,14 +13,14 @@ from sqlite3 import dbapi2 as sqlite3
 import json
 
 from flask import Flask, Response, request, jsonify, g, Blueprint, render_template
-from flask.ext import restful
-from werkzeug import check_password_hash, generate_password_hash
+from flask_restful import Api, Resource, abort
+from werkzeug.security import generate_password_hash, check_password_hash
 
 import utils.helper as helpers
 from postmanbin.debug_routes import debug_routes
 
 app = Flask(__name__)
-api = restful.Api(app)
+api = Api(app)
 
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'postman_demo.db'),
@@ -34,10 +34,12 @@ app.register_blueprint(debug_routes)
 # DB Operations
 # ----
 
+
 def connect_db():
     rv = sqlite3.connect(app.config['DATABASE'])
     rv.row_factory = sqlite3.Row
     return rv
+
 
 def init_db():
     with app.app_context():
@@ -46,11 +48,13 @@ def init_db():
             db.cursor().executescript(f.read())
         db.commit()
 
+
 def get_db():
     # set a sqlite_db attribute on the flask global object
     if not hasattr(g, 'sqlite_db'):
         g.sqlite_db = connect_db()
     return g.sqlite_db
+
 
 @app.teardown_appcontext
 def close_db(error):
@@ -61,7 +65,8 @@ def close_db(error):
 # Restful API
 # ---
 
-class Blog(restful.Resource):
+
+class Blog(Resource):
     # get /blog/posts all posts
     def get(self):
         db = get_db()
@@ -88,7 +93,8 @@ class Blog(restful.Resource):
                 return {'message': "Post added successfully", "post_id": post_id}
         return {"message": "Invalid credentials"}
 
-class BlogPost(restful.Resource):
+
+class BlogPost(Resource):
     # get /blog/posts/:id - return the blog post
     def get(self, post_id):
         db = get_db()
@@ -96,7 +102,7 @@ class BlogPost(restful.Resource):
                         [post_id])
         post = cur.fetchone()
         if not post:
-            restful.abort(404, message="post doesn't exist")
+            abort(404, message="post doesn't exist")
         return {'id': post[0], 'created_at': post[1], 'content': post[2]}
 
     # put /blog/posts/:id - edit the blog post
@@ -115,9 +121,10 @@ class BlogPost(restful.Resource):
         db.commit()
         return jsonify({'message': 'Blog post deleted successfully'})
 
+
 # get /blog/users
 # post /blog/users
-class UserList(restful.Resource):
+class UserList(Resource):
     def get(self):
         db = get_db()
         cur = db.execute('select id, username, created_at, token from users')
@@ -135,6 +142,7 @@ class UserList(restful.Resource):
         db.commit()
         return {'message': "User created successfully"}
 
+
 @app.route('/blog/users/<int:user_id>')
 def user_detail(user_id):
     """ get /blog/users/:id - info about a user """
@@ -143,17 +151,22 @@ def user_detail(user_id):
                      users where id = (?)', [user_id])
     user = cur.fetchone()
     if not user:
-        restful.abort(404, message="user doesn't exist")
+        abort(404, message="user doesn't exist")
     return jsonify({'id': user[0], 'username': user[1],
                     'created_at': user[2], 'token': user[3]})
+
 
 @app.route('/blog/users/tokens/', methods=["POST"])
 def new_token():
     """ post /users/tokens - create a new token """
     db = get_db()
-    post_data = json.loads(request.data)
+    try:
+        print(request.data)
+        post_data = json.loads(request.data)
+    except:
+        pass
     cur = db.execute('select id, pw_hash from users where username = (?)',
-                    [post_data.get('username')])
+                     [post_data.get('username')])
     (user_id, pw_hash) = cur.fetchone()
     if pw_hash and check_password_hash(pw_hash, post_data.get('password')):
         token = helpers.generate_token()
@@ -162,7 +175,8 @@ def new_token():
         db.commit()
         return jsonify({'token': token, 'user_id': user_id})
     else:
-        restful.abort(401, message="username / password combination doesn't match")
+        abort(401, message="username / password combination doesn't match")
+
 
 @app.route('/blog/users/tokens/<token_id>', methods=["DELETE"])
 def delete_token(token_id):
